@@ -6,6 +6,7 @@ import { defineConfig, mergeConfig } from "vite-plus";
 import baseConfig from "../../vite.config.ts";
 import { loadRepoEnv } from "../../scripts/lib/public-config.ts";
 import rootPackageJson from "../../package.json" with { type: "json" };
+import { cliUndiciRequirePlugin } from "../../scripts/lib/cli-undici-require.ts";
 import packageJson from "./package.json" with { type: "json" };
 import { WeightedShardSequencer } from "./src/testUtils/weightedShardSequencer.ts";
 
@@ -88,6 +89,7 @@ export default mergeConfig(
       },
     },
     pack: {
+      plugins: packExecutable ? [cliUndiciRequirePlugin()] : [],
       // SEA embeds one entry; expose the history worker as a hidden subcommand.
       entry: packBootstrap
         ? ["src/bin.ts"]
@@ -117,9 +119,11 @@ export default mergeConfig(
         : {}),
       deps: {
         // alwaysBundle=false has no opinion; neverBundle must retain transitive native acceleration.
-        alwaysBundle: shouldBundleCliDependency,
+        alwaysBundle: (id: string) =>
+          (packExecutable && id === "undici") || shouldBundleCliDependency(id),
         neverBundle: (id: string) =>
-          (packBootstrap && id === "./binMain.ts") || isExternalCliDependency(id),
+          (packBootstrap && id === "./binMain.ts") ||
+          (isExternalCliDependency(id) && !(packExecutable && id === "undici")),
         onlyBundle: false,
       },
       banner: {
