@@ -207,7 +207,7 @@ export function projectEnvironmentConnectionSummary(
 ): EnvironmentConnectionSummary {
   return {
     environmentId,
-    environmentLabel: environment.entry.target.label,
+    environmentLabel: environment.serverConfig?.environment.label ?? environment.entry.target.label,
     displayUrl: connectionCatalogDisplayUrl(environment.entry) ?? "",
     isRelayManaged: hasRelayRoute(environment.entry),
     isEnabled: environment.entry.enabled,

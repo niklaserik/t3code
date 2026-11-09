@@ -70,6 +70,14 @@ describe("environment summary subscriptions", () => {
       expect(h.registry.get(h.pullRequestsSupportedAtom)).toBe(false);
       expect(h.registry.get(h.environmentIdsAtom)).toEqual([FIRST]);
       expect(h.registry.get(h.identitiesAtom)).toEqual([{ environmentId: FIRST, label: "first" }]);
+      const renamedConfig = config();
+      h.registry.set(h.configs(FIRST), {
+        ...renamedConfig,
+        environment: { ...renamedConfig.environment, label: "Development" },
+      });
+      expect(h.registry.get(h.environmentsAtom)[0]?.environmentLabel).toBe("Development");
+      h.registry.set(h.configs(FIRST), null);
+      expect(h.registry.get(h.environmentsAtom)[0]?.environmentLabel).toBe("first");
       h.registry.set(h.catalog, {
         isReady: true,
         entries: new Map([

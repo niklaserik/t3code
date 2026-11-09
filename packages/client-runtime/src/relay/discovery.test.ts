@@ -49,12 +49,24 @@ const environments = [
 function status(
   environment: RelayClientEnvironmentRecord,
   value: "online" | "offline",
+  descriptorLabel?: string,
 ): RelayEnvironmentStatusResponse {
   return {
     environmentId: environment.environmentId,
     endpoint: environment.endpoint,
     status: value,
     checkedAt: "2026-06-01T00:00:00.000Z",
+    ...(descriptorLabel === undefined
+      ? {}
+      : {
+          descriptor: {
+            environmentId: environment.environmentId,
+            label: descriptorLabel,
+            platform: { os: "darwin", arch: "arm64" },
+            serverVersion: "1.0.0",
+            capabilities: { repositoryIdentity: true },
+          },
+        }),
   };
 }
 
@@ -248,7 +260,7 @@ describe("RelayEnvironmentDiscovery", () => {
         const requests = yield* Ref.get(harness.statusRequests);
         yield* Deferred.succeed(
           requests.get(environments[1]!.environmentId)!,
-          status(environments[1]!, "online"),
+          status(environments[1]!, "online", "Renamed Environment Two"),
         );
 
         const partiallyResolved = yield* SubscriptionRef.changes(discovery.state).pipe(
@@ -262,6 +274,9 @@ describe("RelayEnvironmentDiscovery", () => {
         expect(
           partiallyResolved.environments.get(environments[0]!.environmentId)?.availability,
         ).toBe("checking");
+        expect(
+          partiallyResolved.environments.get(environments[1]!.environmentId)?.environment.label,
+        ).toBe("Renamed Environment Two");
 
         yield* Deferred.succeed(
           requests.get(environments[0]!.environmentId)!,
@@ -272,6 +287,9 @@ describe("RelayEnvironmentDiscovery", () => {
         const complete = yield* SubscriptionRef.get(discovery.state);
         expect(complete.environments.get(environments[0]!.environmentId)?.availability).toBe(
           "offline",
+        );
+        expect(complete.environments.get(environments[0]!.environmentId)?.environment.label).toBe(
+          environments[0]!.label,
         );
         expect(complete.refreshing).toBe(false);
       }).pipe(Effect.provide(harness.layer));
@@ -306,6 +324,7 @@ describe("RelayEnvironmentDiscovery", () => {
         expect(RelayEnvironmentDiscovery.relayEnvironmentRegistration(after, deregistered)).toBe(
           "unregistered",
         );
+        expect(after.environments.get(listed)?.environment.label).toBe(environments[0]!.label);
       }).pipe(Effect.provide(harness.layer));
     }),
   );

@@ -177,6 +177,7 @@ export const make = Effect.fn("RelayEnvironmentDiscovery.make")(function* () {
       );
 
     if (result._tag === "Success") {
+      const descriptor = result.success.status === "online" ? result.success.descriptor : undefined;
       if (result.success.status === "offline") {
         const fingerprint = `${result.success.endpoint.httpBaseUrl}\n${result.success.error ?? ""}`;
         const shouldReport = yield* Ref.modify(offlineReportFingerprints, (current) => {
@@ -198,6 +199,9 @@ export const make = Effect.fn("RelayEnvironmentDiscovery.make")(function* () {
       }
       yield* updateEnvironment(generation, environment.environmentId, (current) => ({
         ...current,
+        ...(descriptor === undefined
+          ? {}
+          : { environment: { ...current.environment, label: descriptor.label } }),
         availability: result.success.status,
         status: Option.some(result.success),
         error: Option.none(),
