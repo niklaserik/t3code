@@ -182,6 +182,12 @@ const resolveFriendlyHostLabel = Effect.fn("resolveFriendlyHostLabel")(function*
 export const resolveServerEnvironmentLabel = Effect.fn("resolveServerEnvironmentLabel")(function* (
   input: ResolveServerEnvironmentLabelInput,
 ) {
+  const environment = yield* HostProcess.Environment;
+  const configuredLabel = normalizeLabel(environment.T3CODE_ENVIRONMENT_LABEL);
+  if (configuredLabel) {
+    return configuredLabel;
+  }
+
   const friendlyHostLabel = yield* resolveFriendlyHostLabel();
   if (friendlyHostLabel) {
     return friendlyHostLabel;

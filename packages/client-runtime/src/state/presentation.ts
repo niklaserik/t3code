@@ -11,6 +11,7 @@ import { AsyncResult, Atom } from "effect/reactivity";
 import { AVAILABLE_CONNECTION_STATE, type SupervisorConnectionState } from "../connection/model.ts";
 import {
   connectionCatalogDisplayUrl,
+  environmentDisplayLabel,
   presentConnectionState,
   type EnvironmentConnectionPhase,
   type EnvironmentConnectionPresentation,
@@ -207,7 +208,7 @@ export function projectEnvironmentConnectionSummary(
 ): EnvironmentConnectionSummary {
   return {
     environmentId,
-    environmentLabel: environment.entry.target.label,
+    environmentLabel: environmentDisplayLabel(environment),
     displayUrl: connectionCatalogDisplayUrl(environment.entry) ?? "",
     isRelayManaged: hasRelayRoute(environment.entry),
     isEnabled: environment.entry.enabled,

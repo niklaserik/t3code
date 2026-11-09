@@ -3,6 +3,19 @@
 Connect a phone, browser, or another desktop app to T3 Code running on a different
 machine. That machine must stay running and reachable while you work.
 
+### Name a server
+
+To distinguish multiple servers on the same Mac, set
+`T3CODE_ENVIRONMENT_LABEL` in the background service's
+[`service.env`](./background-service.md#configure-the-service-environment):
+
+```dotenv
+T3CODE_ENVIRONMENT_LABEL=Studio
+```
+
+Restart the service for the name to take effect. Remove the variable and restart
+again to restore the automatic computer-name fallback.
+
 ## T3 Connect
 
 T3 Connect makes an environment available to your other devices without setting

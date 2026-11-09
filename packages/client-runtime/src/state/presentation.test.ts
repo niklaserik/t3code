@@ -4,7 +4,13 @@ import * as Option from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
 
 import type { ConnectionCatalogEntry } from "../connection/catalog.ts";
-import { AVAILABLE_CONNECTION_STATE, PrimaryConnectionTarget } from "../connection/model.ts";
+import {
+  AVAILABLE_CONNECTION_STATE,
+  BearerConnectionTarget,
+  PrimaryConnectionTarget,
+  RelayConnectionTarget,
+  SshConnectionTarget,
+} from "../connection/model.ts";
 import {
   createEnvironmentPresentationAtoms,
   createEnvironmentSummaryAtoms,
@@ -70,6 +76,36 @@ describe("environment summary subscriptions", () => {
       expect(h.registry.get(h.pullRequestsSupportedAtom)).toBe(false);
       expect(h.registry.get(h.environmentIdsAtom)).toEqual([FIRST]);
       expect(h.registry.get(h.identitiesAtom)).toEqual([{ environmentId: FIRST, label: "first" }]);
+      const renamedConfig = config();
+      h.registry.set(h.configs(FIRST), {
+        ...renamedConfig,
+        environment: { ...renamedConfig.environment, label: "Development" },
+      });
+      expect(h.registry.get(h.environmentsAtom)[0]?.environmentLabel).toBe("Development");
+      for (const target of [
+        new BearerConnectionTarget({
+          environmentId: FIRST,
+          label: "My direct name",
+          connectionId: "direct",
+        }),
+        new SshConnectionTarget({
+          environmentId: FIRST,
+          label: "My SSH name",
+          connectionId: "ssh",
+        }),
+        new RelayConnectionTarget({ environmentId: FIRST, label: "Old computer name" }),
+      ]) {
+        h.registry.set(h.catalog, {
+          isReady: true,
+          entries: new Map([[FIRST, { ...entry(FIRST), target }]]),
+        });
+        expect(h.registry.get(h.environmentsAtom)[0]?.environmentLabel).toBe(
+          target._tag === "RelayConnectionTarget" ? "Development" : target.label,
+        );
+      }
+      h.registry.set(h.catalog, { isReady: true, entries: new Map([[FIRST, entry(FIRST)]]) });
+      h.registry.set(h.configs(FIRST), null);
+      expect(h.registry.get(h.environmentsAtom)[0]?.environmentLabel).toBe("first");
       h.registry.set(h.catalog, {
         isReady: true,
         entries: new Map([
