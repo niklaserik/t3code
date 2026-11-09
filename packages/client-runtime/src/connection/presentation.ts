@@ -33,6 +33,18 @@ export interface EnvironmentPresentation {
   readonly serverConfig: EnvironmentServerConfig | null;
 }
 
+export function environmentDisplayLabel(environment: EnvironmentPresentation): string {
+  const target = environment.entry.target;
+  switch (target._tag) {
+    case "PrimaryConnectionTarget":
+    case "RelayConnectionTarget":
+      return environment.serverConfig?.environment.label ?? target.label;
+    case "BearerConnectionTarget":
+    case "SshConnectionTarget":
+      return target.label;
+  }
+}
+
 export function presentConnectionState(
   state: SupervisorConnectionState,
 ): EnvironmentConnectionPresentation {
